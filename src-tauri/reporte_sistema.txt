@@ -1,0 +1,27 @@
+
+    =========================================
+    INFORME TÉCNICO DE SISTEMA
+    =========================================
+    Fecha: 10/1/2026, 11:47:53 p. m.
+
+    DATOS DEL HARDWARE:
+    -----------------------------------------
+    S.O.:             Fedora Linux
+    Placa Base:       Micro-Star International Co., Ltd. A320M-A PRO (MS-7C51)
+    BIOS:             1.80
+    Procesador:       AMD Athlon 3000G with Radeon Vega Graphics
+    RAM:              13.56 GB (DDR4 (Probable))
+
+    ALMACENAMIENTO:
+    -----------------------------------------
+    - / (overlay): 110 GB
+- /run/media/system/pruebas-datos (/dev/sdb1): 46 GB
+- /run/media/system/simulaciones-varias (/dev/sdb2): 111 GB
+- /run/media/Luis/datos (/dev/sdb6): 502 GB
+- /run/media/Luis/videos-imagenes (/dev/sdb4): 250 GB
+- /run/media/Luis/91dc60c3-8d6d-44bf-8f1d-32d88535abe5 (/dev/sdb7): 0 GB
+- /run/media/Luis/9A04D80404D7E0F5 (/dev/sdb5): 0 GB
+
+    =========================================
+    Generado con Tauri + Rust en Fedora/Bazzite
+    =========================================

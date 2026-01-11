@@ -1,0 +1,182 @@
+import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+
+interface DiskInfo {
+  name: string;
+  total_gb: number;
+  mount_point: string;
+}
+
+interface SystemInfo {
+  os_name: string;
+  motherboard: string;
+  bios: string;
+  cpu_model: string;
+  ram_total_gb: number;
+  ram_type: string;
+  disks: DiskInfo[];
+}
+
+function App() {
+  const [datos, setDatos] = useState<SystemInfo | null>(null);
+
+  const obtenerDatos = async () => {
+    try {
+      const info: SystemInfo = await invoke("run_system_report");
+      setDatos(info);
+    } catch (error) {
+      console.error("Error obteniendo datos:", error);
+    }
+  };
+
+  useEffect(() => {
+    obtenerDatos();
+  }, []);
+
+  // FUNCIÓN CORREGIDA: Sin duplicados y con el texto dentro del scope
+  const manejarGuardado = async () => {
+    if (!datos) return;
+
+    const texto = `
+    =========================================
+    INFORME TÉCNICO DE SISTEMA
+    =========================================
+    Fecha: ${new Date().toLocaleString()}
+
+    DATOS DEL HARDWARE:
+    -----------------------------------------
+    S.O.:             ${datos.os_name}
+    Placa Base:       ${datos.motherboard}
+    BIOS:             ${datos.bios}
+    Procesador:       ${datos.cpu_model}
+    RAM:              ${datos.ram_total_gb.toFixed(2)} GB (${datos.ram_type})
+
+    ALMACENAMIENTO:
+    -----------------------------------------
+    ${datos.disks.map(d => `- ${d.mount_point} (${d.name || 'Disco'}): ${d.total_gb} GB`).join('\n')}
+
+    =========================================
+    Generado con Tauri + Rust en Fedora/Bazzite
+    =========================================`;
+
+    try {
+      const mensaje: string = await invoke("guardar_informe", { contenido: texto });
+      alert(mensaje);
+    } catch (error) {
+      alert("Error al guardar: " + error);
+    }
+  };
+
+  if (!datos) return <div className="loading">Iniciando diagnóstico...</div>;
+
+  return (
+    <div className="container" data-tauri-drag-region>
+    <style>{`
+      .container {
+        padding: 30px;
+        color: #e0e0e0;
+        background: #121212;
+        min-height: 100vh;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        border-radius: 12px;
+        position: relative;
+      }
+      .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: #ff5f56;
+        border: none;
+        border-radius: 50%;
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+        z-index: 100;
+      }
+      h1 {
+        text-align: center;
+        color: #00d4ff;
+        margin-bottom: 30px;
+        font-weight: 300;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+      }
+      .card {
+        background: #1e1e1e;
+        padding: 20px;
+        border-radius: 15px;
+        border: 1px solid #333;
+      }
+      .card h3 {
+        margin: 0 0 15px 0;
+        color: #00d4ff;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+      }
+      .disk-item {
+        background: #262626;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 10px;
+        border-left: 3px solid #00d4ff;
+      }
+      .btn-container { margin-top: 40px; text-align: center; }
+      .btn-guardar {
+        background: linear-gradient(135deg, #00d4ff, #0055ff);
+        color: white;
+        border: none;
+        padding: 14px 35px;
+        border-radius: 30px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .loading { color: #00d4ff; text-align: center; padding-top: 100px; }
+      `}</style>
+
+      <button className="close-btn" onClick={() => window.close()} />
+
+      <h1>Analizador de Hardware</h1>
+
+      <div className="grid">
+      <div className="card">
+      <h3>Sistema y Placa Base</h3>
+      <p><strong>{datos.os_name}</strong></p>
+      <p style={{ color: '#00d4ff' }}>{datos.motherboard}</p>
+      <p style={{ fontSize: '0.8rem', color: '#777' }}>BIOS: {datos.bios}</p>
+      </div>
+
+      <div className="card">
+      <h3>Procesador</h3>
+      <p>{datos.cpu_model}</p>
+      </div>
+
+      <div className="card">
+      <h3>Memoria RAM</h3>
+      <p style={{ fontSize: '1.8rem' }}>{datos.ram_total_gb.toFixed(2)} GB</p>
+      <p style={{ color: '#00d4ff' }}>{datos.ram_type}</p>
+      </div>
+
+      <div className="card">
+      <h3>Almacenamiento</h3>
+      {datos.disks.map((d, i) => (
+        <div key={i} className="disk-item">
+        <div style={{ color: '#00d4ff', fontWeight: 'bold' }}>{d.mount_point}</div>
+        <div>{d.total_gb} GB</div>
+        </div>
+      ))}
+      </div>
+      </div>
+
+      <div className="btn-container">
+      <button className="btn-guardar" onClick={manejarGuardado}>
+      💾 GENERAR INFORME .TXT
+      </button>
+      </div>
+      </div>
+  );
+}
+
+export default App;

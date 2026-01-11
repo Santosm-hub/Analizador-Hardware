@@ -1,0 +1,49 @@
+
+    =========================================
+    INFORME TÉCNICO DE SISTEMA
+    =========================================
+    Fecha de generación: 10/1/2026, 10:22:49 p. m.
+
+    DATOS DEL SISTEMA:
+    -----------------------------------------
+    Sistema Operativo: Fedora Linux
+    Versión del Kernel: 6.17.7-ba22.fc43.x86_64
+
+    HARDWARE PRINCIPAL:
+    -----------------------------------------
+    Procesador: AMD Athlon 3000G with Radeon Vega Graphics
+    Memoria RAM: 13.56 GB
+
+    ALMACENAMIENTO:
+    -----------------------------------------
+    - /dev/sda3: 110 GB (Montado en: /etc/hosts)
+- /dev/sda3: 110 GB (Montado en: /home/Luis)
+- /dev/sda3: 110 GB (Montado en: /home/Luis/.local/share/containers/storage/overlay)
+- /dev/sda3: 110 GB (Montado en: /etc/hostname)
+- composefs: 0 GB (Montado en: /usr/bin/entrypoint)
+- /dev/sda3: 110 GB (Montado en: /var/home/Luis)
+- /dev/sda3: 110 GB (Montado en: /var/home/Luis/.local/share/containers/storage/overlay)
+- composefs: 0 GB (Montado en: /usr/bin/distrobox-host-exec)
+- composefs: 0 GB (Montado en: /usr/bin/distrobox-export)
+- /dev/sda3: 110 GB (Montado en: /var/home/Luis/Documentos/cajas)
+- overlay: 110 GB (Montado en: /)
+- /dev/sda3: 110 GB (Montado en: /home/Luis)
+- /dev/sda3: 110 GB (Montado en: /home/Luis/.local/share/containers/storage/overlay)
+- /dev/sda3: 110 GB (Montado en: /etc/host.conf)
+- /dev/sda3: 110 GB (Montado en: /etc/machine-id)
+- /dev/sdb1: 46 GB (Montado en: /run/media/system/pruebas-datos)
+- /dev/sdb2: 111 GB (Montado en: /run/media/system/simulaciones-varias)
+- /dev/sdb6: 502 GB (Montado en: /run/media/Luis/datos)
+- /dev/sdb4: 250 GB (Montado en: /run/media/Luis/videos-imagenes)
+- /dev/sdb7: 0 GB (Montado en: /run/media/Luis/91dc60c3-8d6d-44bf-8f1d-32d88535abe5)
+- /dev/sdb5: 0 GB (Montado en: /run/media/Luis/9A04D80404D7E0F5)
+- /dev/sda3: 110 GB (Montado en: /var/lib/libvirt)
+- /dev/sda3: 110 GB (Montado en: /var/mnt)
+- composefs: 0 GB (Montado en: /usr/local/share/themes)
+- composefs: 0 GB (Montado en: /usr/local/share/icons)
+- composefs: 0 GB (Montado en: /usr/local/share/fonts)
+- overlay: 110 GB (Montado en: /dev/console)
+
+    =========================================
+    Generado con Tauri + Rust en Fedora
+    =========================================
