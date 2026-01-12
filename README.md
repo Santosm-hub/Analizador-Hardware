@@ -1,6 +1,6 @@
 # 🛠️ Analizador de Hardware (v0.1.0)
 
-![Vista previa de la aplicación](../src-tauri/screenshots/vista-previa_1.png)
+![Vista previa de la aplicación](../src-tauri/screenshots/vista-previa-1.png)
 ![Vista previa de la aplicación](../screenshots/vista-previa_2.png)
 ![Vista previa de la aplicación](../screenshots/reporte-guardado_txt.png)
 
