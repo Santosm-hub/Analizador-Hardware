@@ -4,6 +4,8 @@ use std::fs::File;
 use std::io::Write;
 use std::process::Command;
 use tauri::command;
+use std::env;
+use std::path::PathBuf;
 
 #[derive(Serialize)]
 struct DiskInfo {
@@ -87,7 +89,26 @@ fn run_system_report() -> SystemInfo {
          read_sys_file("/sys/class/dmi/id/bios_version")
         )
     } else {
-        ("Generic".to_string(), "PC Windows".to_string(), "N/A".to_string())
+        // MEJORA PARA WINDOWS: Consultar fabricante y modelo real
+        let wmic_vendor = Command::new("powershell")
+        .args(["-Command", "(Get-CimInstance Win32_BaseBoard).Manufacturer"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .unwrap_or_else(|_| "Generic".to_string());
+
+        let wmic_model = Command::new("powershell")
+        .args(["-Command", "(Get-CimInstance Win32_BaseBoard).Product"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .unwrap_or_else(|_| "PC Windows".to_string());
+
+        let wmic_bios = Command::new("powershell")
+        .args(["-Command", "(Get-CimInstance Win32_BIOS).SMBIOSBIOSVersion"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .unwrap_or_else(|_| "N/A".to_string());
+
+        (wmic_vendor, wmic_model, wmic_bios)
     };
 
     let ram_tipo = obtener_tipo_ram();
@@ -118,22 +139,42 @@ fn run_system_report() -> SystemInfo {
 
 #[command]
 fn guardar_informe(contenido: String) -> Result<String, String> {
-    // RUTA DINÁMICA SEGÚN EL SISTEMA
-    let ruta = if cfg!(target_os = "windows") {
-        let user_profile = std::env::var("USERPROFILE").unwrap_or_else(|_| "C:".to_string());
-        format!("{}\\Desktop\\reporte_sistema.txt", user_profile)
+    // 1. OBTENER RUTA BASE (Igual que antes)
+    let mut ruta = if cfg!(target_os = "windows") {
+        let base = env::var("USERPROFILE").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from("C:\\"));
+        base.join("Desktop")
     } else {
-        "/home/Luis/Escritorio/reporte_sistema.txt".to_string()
+        let base = env::var("HOME").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from("/tmp"));
+        let mut p = base.join("Desktop");
+        if !p.exists() {
+            p = base.join("Escritorio");
+        }
+        p
     };
 
-    let mut file = File::create(&ruta).map_err(|e| e.to_string())?;
+    // --- NUEVA LÓGICA DE SEGURIDAD ---
+    // 2. ASEGURAR QUE LA CARPETA EXISTE (Si no existe, la crea)
+    fs::create_dir_all(&ruta).map_err(|e| format!("No se pudo crear el directorio: {}", e))?;
+
+    // 3. AÑADIR NOMBRE DEL ARCHIVO
+    ruta.push("reporte_sistema.txt");
+
+    // 4. GUARDAR
+    let mut file = File::create(&ruta).map_err(|e| format!("Error al crear archivo: {}", e))?;
     file.write_all(contenido.as_bytes()).map_err(|e| e.to_string())?;
 
-    // En Linux devolvemos el permiso al usuario Luis
+    // 5. PERMISOS (Solo Linux)
     #[cfg(target_os = "linux")]
-    let _ = Command::new("chown").arg("Luis:Luis").arg(&ruta).status();
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if let Ok(metadata) = std::fs::metadata(&ruta) {
+            let mut perms = metadata.permissions();
+            perms.set_mode(0o644);
+            let _ = std::fs::set_permissions(&ruta, perms);
+        }
+    }
 
-    Ok(format!("¡Informe guardado en: {}!", ruta))
+    Ok(format!("¡Informe guardado en: {}!", ruta.display()))
 }
 
 pub fn run() {
