@@ -33,7 +33,6 @@ function App() {
     obtenerDatos();
   }, []);
 
-  // FUNCIÓN CORREGIDA: Sin duplicados y con el texto dentro del scope
   const manejarGuardado = async () => {
     if (!datos) return;
 
@@ -116,13 +115,6 @@ function App() {
         font-size: 0.75rem;
         text-transform: uppercase;
       }
-      .disk-item {
-        background: #262626;
-        padding: 12px;
-        border-radius: 8px;
-        margin-top: 10px;
-        border-left: 3px solid #00d4ff;
-      }
       .btn-container { margin-top: 40px; text-align: center; }
       .btn-guardar {
         background: linear-gradient(135deg, #00d4ff, #0055ff);
@@ -162,9 +154,28 @@ function App() {
       <div className="card">
       <h3>Almacenamiento</h3>
       {datos.disks.map((d, i) => (
-        <div key={i} className="disk-item">
-        <div style={{ color: '#00d4ff', fontWeight: 'bold' }}>{d.mount_point}</div>
-        <div>{d.total_gb} GB</div>
+        <div key={i} style={{
+          backgroundColor: '#262626',
+          borderRadius: '8px',
+          padding: '12px',
+          marginTop: '10px',
+          borderLeft: '4px solid #00d4ff',
+          overflow: 'hidden'
+        }}>
+        <h4 style={{
+          margin: 0,
+          color: '#00d4ff',
+          fontSize: '13px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          width: '100%'
+        }} title={d.mount_point}>
+        {d.mount_point}
+        </h4>
+        <p style={{ margin: '5px 0 0', color: '#e0e0e0', fontSize: '0.9rem' }}>
+        <strong>{d.total_gb} GB</strong> <span style={{ color: '#777', fontSize: '0.8rem' }}>({d.name})</span>
+        </p>
         </div>
       ))}
       </div>
