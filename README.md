@@ -1,4 +1,8 @@
-# 🛠️ Analizador de Hardware del Sistema (v0.1.0)
+# 🛠️ Analizador de Hardware (v0.1.0)
+
+![Vista previa de la aplicación](./screenshots/vista-previa_1.png)
+![Vista previa de la aplicación](./screenshots/vista-previa_2.png)
+![Vista previa de la aplicación](./screenshots/reporte-guardado_txt.png)
 
 Una aplicación de escritorio moderna y multiplataforma diseñada para el diagnóstico rápido de hardware. Construida con **Rust**, **Tauri** y **React**, esta herramienta ofrece una visión técnica detallada del sistema con la capacidad de exportar informes físicos.
 
