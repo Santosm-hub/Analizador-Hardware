@@ -36,31 +36,51 @@ function App() {
   const manejarGuardado = async () => {
     if (!datos) return;
 
-    const texto = `
-    =========================================
-    INFORME TÉCNICO DE SISTEMA
-    =========================================
-    Fecha: ${new Date().toLocaleString()}
+    const fecha = new Date().toLocaleString();
 
-    DATOS DEL HARDWARE:
-    -----------------------------------------
-    S.O.:             ${datos.os_name}
-    Placa Base:       ${datos.motherboard}
-    BIOS:             ${datos.bios}
-    Procesador:       ${datos.cpu_model}
-    RAM:              ${datos.ram_total_gb.toFixed(2)} GB (${datos.ram_type})
+    // Decidimos qué etiqueta usar según si hay frecuencia detectada
+    const tieneFrecuencia = datos.ram_type.includes("MHz") || datos.ram_type.includes("MT/s");
+    const ramDetalle = tieneFrecuencia
+    ? `Tipo/Velocidad:    ${datos.ram_type}`
+    : `Tipo de Memoria:   ${datos.ram_type}`;
 
-    ALMACENAMIENTO:
-    -----------------------------------------
-    ${datos.disks.map(d => `- ${d.mount_point} (${d.name || 'Disco'}): ${d.total_gb} GB`).join('\n')}
+    const texto = `============================================================
+    REPORTE TÉCNICO DE DIAGNÓSTICO DE HARDWARE
+    ============================================================
+    Fecha de emisión: ${fecha}
+    Generado por: Analizador de Sistema (Tauri + Rust)
+    ------------------------------------------------------------
 
-    =========================================
-    Generado con Tauri + Rust en Fedora/Bazzite
-    =========================================`;
+    [ INFORMACIÓN DEL SISTEMA OPERATIVO ]
+    ------------------------------------------------------------
+    S.O. Instalado:    ${datos.os_name}
+    Arquitectura:      x64 (64-bit)
+
+    [ ESPECIFICACIONES DE LA PLACA BASE ]
+    ------------------------------------------------------------
+    Fabricante/Modelo: ${datos.motherboard}
+    Versión de BIOS:   ${datos.bios}
+
+    [ PROCESADOR (CPU) ]
+    ------------------------------------------------------------
+    Modelo:            ${datos.cpu_model}
+
+    [ MEMORIA RAM ]
+    ------------------------------------------------------------
+    Capacidad Total:   ${datos.ram_total_gb.toFixed(2)} GB
+    ${ramDetalle}
+
+    [ UNIDADES DE ALMACENAMIENTO ]
+    ------------------------------------------------------------
+    ${datos.disks.map(d => `Punto de Montaje: ${d.mount_point.padEnd(5)} | Nombre: ${(d.name || 'Disco').padEnd(15)} | Total: ${d.total_gb} GB`).join('\n')}
+
+    ============================================================
+    ESTADO DEL DIAGNÓSTICO: FINALIZADO CON ÉXITO
+    ============================================================`.trim();
 
     try {
-      const mensaje: string = await invoke("guardar_informe", { contenido: texto });
-      alert(mensaje);
+      const respuesta: string = await invoke("guardar_informe", { contenido: texto });
+      alert(respuesta);
     } catch (error) {
       alert("Error al guardar: " + error);
     }
@@ -124,7 +144,9 @@ function App() {
         border-radius: 30px;
         font-weight: bold;
         cursor: pointer;
+        transition: transform 0.2s;
       }
+      .btn-guardar:hover { transform: scale(1.05); }
       .loading { color: #00d4ff; text-align: center; padding-top: 100px; }
       `}</style>
 

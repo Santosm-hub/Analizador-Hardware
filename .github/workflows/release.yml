@@ -1,46 +1,38 @@
-name: "Publish Release"
-
+name: "publish"
 on:
   push:
     branches:
-      - main  # Se ejecutará cada vez que subas algo a la rama principal
+      - main
 
 jobs:
   publish:
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows-latest] # Solo Windows por ahora
+        platform: [windows-latest] # Solo Windows para tu presentación
 
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
-
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
-
+          node-version: 20
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
-
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev
-
       - name: install frontend dependencies
         run: npm install
-
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: app-v__VERSION__ # Esto creará una versión automática
+          tagName: app-v__VERSION__ # tauri-action reemplaza esto
           releaseName: "Analizador de Hardware v__VERSION__"
-          releaseBody: "Reporte de hardware multiplataforma (Windows/Linux)."
+          releaseBody: "Reporte generado automáticamente por GitHub Actions."
           releaseDraft: true
           prerelease: false

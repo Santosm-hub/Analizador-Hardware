@@ -1,11 +1,8 @@
 use serde::Serialize;
 use std::fs;
-use std::fs::File;
-use std::io::Write;
 use std::process::Command;
 use tauri::command;
 use std::env;
-use std::path::PathBuf;
 
 #[derive(Serialize)]
 struct DiskInfo {
@@ -33,12 +30,11 @@ fn read_sys_file(path: &str) -> String {
 }
 
 fn obtener_tipo_ram() -> String {
-    // LÓGICA PARA WINDOWS
     #[cfg(target_os = "windows")]
     {
         let output = Command::new("powershell")
         .arg("-Command")
-        .arg("Get-CimInstance Win32_PhysicalMemory | Select-Object -First 1 @{L='Info';E={($_.ConfiguredClockSpeed).ToString() + ' MT/s ' + (if($_.MemoryType -eq 0){'DDR4/DDR5'})}} | Select-Object -ExpandProperty Info")
+        .arg("Get-CimInstance Win32_PhysicalMemory | Select-Object -First 1 @{L='Info';E={($_.ConfiguredClockSpeed).ToString() + ' MHz ' + (if($_.MemoryType -eq 0){'DDR4/DDR5'})}} | Select-Object -ExpandProperty Info")
         .output();
 
         match output {
@@ -50,28 +46,26 @@ fn obtener_tipo_ram() -> String {
         }
     }
 
-    // LÓGICA PARA LINUX (Bazzite/Fedora)
     #[cfg(target_os = "linux")]
     {
-        let output = Command::new("sh")
-        .arg("-c")
-        .arg("/usr/sbin/dmidecode -t memory | grep -E 'Type: DDR|Speed: [0-9]' | head -n 2")
-        .output();
+        // Intentamos leer la frecuencia desde el sistema de archivos de Linux
+        let speed = fs::read_to_string("/sys/class/dmi/id/memory_speed") // Algunos sistemas Fedora lo tienen aquí
+        .unwrap_or_else(|_| {
+            // Si no, intentamos un comando rápido que no suele pedir sudo
+            let out = Command::new("sh")
+            .arg("-c")
+            .arg("dmidecode -t memory | grep 'Speed' | head -n 1 | awk '{print $2}'")
+            .output();
+            match out {
+                Ok(o) => String::from_utf8_lossy(&o.stdout).trim().to_string(),
+                        Err(_) => "".to_string(),
+            }
+        });
 
-        match output {
-            Ok(out) => {
-                let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-                if s.is_empty() {
-                    "DDR4 (Probable)".to_string()
-                } else {
-                    s.replace("Type: ", "")
-                    .replace("\nSpeed: ", " @ ")
-                    .replace("Speed: ", " @ ")
-                    .trim()
-                    .to_string()
-                }
-            },
-            Err(_) => "DDR4".to_string(),
+        if speed.is_empty() || speed == "Unknown" {
+            "DDR4".to_string()
+        } else {
+            format!("DDR4 @ {} MHz", speed)
         }
     }
 }
@@ -138,43 +132,20 @@ fn run_system_report() -> SystemInfo {
 }
 
 #[command]
-fn guardar_informe(contenido: String) -> Result<String, String> {
-    // 1. OBTENER RUTA BASE (Igual que antes)
-    let mut ruta = if cfg!(target_os = "windows") {
-        let base = env::var("USERPROFILE").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from("C:\\"));
-        base.join("Desktop")
-    } else {
-        let base = env::var("HOME").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from("/tmp"));
-        let mut p = base.join("Desktop");
-        if !p.exists() {
-            p = base.join("Escritorio");
-        }
-        p
-    };
+async fn guardar_informe(contenido: String) -> Result<String, String> {
+    // Usamos la librería 'directories' que ya tienes y funciona bien
+    let user_dirs = directories::UserDirs::new()
+    .ok_or("No se pudieron detectar directorios de usuario")?;
 
-    // --- NUEVA LÓGICA DE SEGURIDAD ---
-    // 2. ASEGURAR QUE LA CARPETA EXISTE (Si no existe, la crea)
-    fs::create_dir_all(&ruta).map_err(|e| format!("No se pudo crear el directorio: {}", e))?;
+    let ruta_escritorio = user_dirs.desktop_dir()
+    .ok_or("No se encontró el Escritorio")?;
 
-    // 3. AÑADIR NOMBRE DEL ARCHIVO
-    ruta.push("reporte_sistema.txt");
+    let ruta_archivo = ruta_escritorio.join("Informe_Sistema.txt");
 
-    // 4. GUARDAR
-    let mut file = File::create(&ruta).map_err(|e| format!("Error al crear archivo: {}", e))?;
-    file.write_all(contenido.as_bytes()).map_err(|e| e.to_string())?;
+    fs::write(&ruta_archivo, contenido)
+    .map_err(|e| format!("Error (os error {}): {}", e.raw_os_error().unwrap_or(0), e))?;
 
-    // 5. PERMISOS (Solo Linux)
-    #[cfg(target_os = "linux")]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        if let Ok(metadata) = std::fs::metadata(&ruta) {
-            let mut perms = metadata.permissions();
-            perms.set_mode(0o644);
-            let _ = std::fs::set_permissions(&ruta, perms);
-        }
-    }
-
-    Ok(format!("¡Informe guardado en: {}!", ruta.display()))
+    Ok(format!("¡Guardado en el Escritorio!"))
 }
 
 pub fn run() {
