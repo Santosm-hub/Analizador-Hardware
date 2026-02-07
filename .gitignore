@@ -26,3 +26,14 @@ dist/
 *.njsproj
 *.sln
 *.sw?
+
+# Rust
+/src-tauri/target/
+**/*.rs.bk
+
+# Node
+node_modules/
+dist/
+
+# Tauri
+src-tauri/binaries/
